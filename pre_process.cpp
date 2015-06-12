@@ -157,3 +157,57 @@ void PreProcessTool::smoothing_image(const string& pre_path, const string& after
 	// Check: files not empty
 	CV_Assert(image_dataset.size() != size_t(0));
 }
+
+/*edge detection for images*/
+void PreProcessTool::detect_edge_image(const string& pre_path, const string& after_path) {
+	vector<String> image_dataset;
+	Mat read_temp;
+	Mat convert_temp;
+	Mat grad_x, grad_y;
+	Mat abs_grad_x, abs_grad_y;
+	const int ddepth = CV_16S;
+	glob(pre_path + "/*.png", image_dataset);
+	for (int i = 0; i < image_dataset.size(); i++) {
+		read_temp = imread(image_dataset[i]);
+		cvtColor(read_temp, read_temp, CV_RGB2GRAY);
+		/*equalizeHist(read_temp, convert_temp);*/
+		//cv::Canny(read_temp, convert_temp, 40, 120);  //Canny thresholds input with a ratio 1:3
+		cv::Sobel(read_temp, grad_x, ddepth, 1, 0, 3);
+		convertScaleAbs( grad_x, abs_grad_x );
+		Sobel( read_temp, grad_y, ddepth, 0, 1, 3);
+		convertScaleAbs( grad_y, abs_grad_y );
+
+		// // Total Gradient (approximate)
+		addWeighted( abs_grad_x, 0, abs_grad_y, 1, 0, convert_temp );
+		bool ok = imwrite(after_path + "/" + format("%d", i) + ".png", convert_temp);
+		cout << "saving "<< i <<"image, please wait......" << endl;
+		if (!ok)
+			CV_Error(CV_StsInternal, "ERROR: image cannot write!");
+	}
+	// Check: files not empty
+	CV_Assert(image_dataset.size() != size_t(0));
+}
+
+/*convert images from rgb to HSV/YUV*/
+void PreProcessTool::convert_color_space_image(const string& pre_path, const string& after_path) {
+	vector<String> image_dataset;
+	Mat read_temp;
+	std::vector<cv::Mat> splited;
+	Mat convert_temp;
+	const int ddepth = CV_16S;
+	glob(pre_path + "/*.png", image_dataset);
+	for (int i = 0; i < image_dataset.size(); i++) {
+		read_temp = imread(image_dataset[i]);
+		/*convert image to from rgb to YUV(CV_BGR2YUV) or to HSV(CV_BGR2HSV)*/
+		cvtColor(read_temp, read_temp, CV_BGR2HSV);
+		cv::split(read_temp, splited);
+		/*extract image in channel0(H/Y), channel1(S/U), channel2(V)*/
+		convert_temp = splited[1];
+		bool ok = imwrite(after_path +"/"+ format("%d", i) +".png", convert_temp);
+		cout << "saving "<< i <<"image, please wait......" << endl;
+		if (!ok)
+			CV_Error(CV_StsInternal, "ERROR: image cannot write!");
+	}
+	// Check: files not empty
+	CV_Assert(image_dataset.size() != size_t(0));
+}
