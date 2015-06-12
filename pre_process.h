@@ -11,4 +11,6 @@ public:
 	void images_to_video(const std::string& pre_path, const std::string& s);
 	void smoothing_image(const std::string& pre_path, const std::string& after_path);
 	void merge_videos(const std::string& pre_path, const std::string& s);
+	void detect_edge_image(const std::string& pre_path, const std::string& after_path);
+	void convert_color_space_image(const std::string& pre_path, const std::string& after_path);
 };
